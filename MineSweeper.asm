@@ -63,25 +63,31 @@ NEXT15:	JB P1.7,BACK
        	ACALL CHECK
        	LJMP BACK
 
+INTERMEDIATE_BACK: JMP BACK  ;//Sprung, da JNZ nicht weit genug springen kann
 
 CHECK:	MOV A,R2
 	JNZ CHECK1
 	JMP WIN
 CHECK1:	MOV A,R0
 	MOVC A,@A+DPTR
-	JNZ BACK
-	MOV A,R0
-	JMP @A+DPTR
-	Mov A, #00000001B
+	JNZ INTERMEDIATE_BACK
+	MOV A,R0	;//Gedrücktes Feld zur Bombe machen, damit der 
+	JMP @A+DPTR	;//Counter nicht ausgetrickst werden kann.
+	MOV A, #00000001B
 	MOVX @DPTR,A
 	JMP BOMB
-BOMB:	mov P0,#11111111B
-	MOV A,#11111111B
+BOMB:	MOV P0,#10001000B
+	;MOV A,#11111111B
 	CLR P1.3
 LOOP:	JB P1.7, LOOP
-	JMP BEGIN
-WIN:	mov P0,#11111111B
-	MOV A,#11111111B
+	MOV DPTR,#RANDOM_NUMBER ;// moves starting address of LUT to DPTR
+	MOV A,#11111111B ;// loads A with all 1's
+	MOV P0,#00000000B ;// initializes P0 as output port
+	MOV R2,#4D
+	JMP BACK
+WIN:	MOV P0,#00010001B
+	;MOV A,#11111111B
+	JMP LOOP
 
 
 RANDOM_NUMBER:	DB 0B ;// Look up table starts here
