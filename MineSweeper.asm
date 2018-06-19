@@ -1,6 +1,6 @@
 ;--------------------Minigame--------------------
 ;
-; Course: 	Systemname Programmierung
+; Course: 	Systemnahe Programmierung 1
 ; Author:	Denny Flämig & Florian Christof
 ;
 	ORG 00H
@@ -11,6 +11,7 @@ BEGIN:	MOV A,#11111111B 	;// loads A with all 1's
 ; -----------------
 ; Polling of Matrix-Keypad
 ;------------------
+
 BACK:	MOV DPTR,#RANDOM_NUMBER ;// moves starting address of RANDOM_NUMBER to DPTR
 	MOV P1,#11111111B 	;// loads P1 with all 1's
      	CLR P1.0  		;// makes row 1 low
@@ -87,54 +88,66 @@ NEXT15:	INC DPTR
 ; -----------------
 ; Jump-Points
 ;------------------
+
 BEGIN_JUMP:	JMP BEGIN
 BACK_JUMP:	JMP BACK
+
 ; -----------------
 ; Gamelogic
 ;------------------
 
-
-CHECK:	JB P1.4, CHECK3
+;//Wait until Player leaves the Button
+CHECK:	JB P1.4, CHECK1
 	JMP CHECK
-CHECK3:	JB P1.5, CHECK4
+CHECK1:	JB P1.5, CHECK2
+	JMP CHECK1
+CHECK2: JB P1.6, CHECK3
+	JMP CHECK2
+CHECK3:	JB P1.7, CHECKPLAYERWON
 	JMP CHECK3
-CHECK4: JB P1.6, CHECK5
-	JMP CHECK4
-CHECK5:	JB P1.7, CHECK2
-	JMP CHECK5
 
-CHECK2:	MOV A,R2
-	JNZ CHECK1
+;// CHECK if player found all fields
+CHECKPLAYERWON:	MOV A,R2
+	JNZ CHECKBOMB
 	JMP WIN
 
+;// Set WIN-LED
 WIN:	CLR P0.1
 	JMP RESTARTINIT
 
-CHECK1:	MOVX A,@DPTR
+;// Compare value with database value
+CHECKBOMB:	MOVX A,@DPTR
 	JNZ BOMB
 	JMP NOBOMB
 
+;// Set LOOSE-LED
 BOMB: 	CLR P0.0
 	JMP RESTARTINIT
+
+;// Set pressed field as bomb
 NOBOMB:	MOV A, #01B
 	MOVX @DPTR, A
 	DEC R2
 	JMP BACK_JUMP
 
+;// Restart game
 RESTARTINIT:	MOV P1,#11111111B 	;// loads P1 with all 1's
 		CLR P1.3  		;// makes row 1 low
 RESTART:	JB P1.7,RESTART
 		JMP BEGIN_JUMP
 
+; -----------------
+; Database
+;------------------
 
 RANDOM_NUMBER:	DB 0B ;// Look up table starts here
-		DB 0B ;// 0 bei zufallszahl an stelle 2
-		DB 0B
+		DB 0B ;// 0 means no bomb at this field
+		DB 0B ;// 1 means bomb
 		DB 0B
 		DB 0B
      		DB 0B
      		DB 0B
-     		DB 0B ;// 1 bei zufallszahl an stelle  8
+     		DB 0B
     		DB 0B
     		DB 0B
     		DB 0B
