@@ -10,7 +10,7 @@ EQU	ZUFZAHLH, 0x43
 
 	ORG 00H
 BEGIN:	MOV P0,#00000011B 	;// initializes P0 as output port
-	MOV R2,#3D		;// initialize number of free minefields + 1
+	MOV R2,#3D		;// initialize number of free minefields - 1
 	MOV ZUFZAHLL,#11100011B
 	MOV ZUFZAHLH,#00000001B
 	
@@ -19,9 +19,9 @@ BEGIN:	MOV P0,#00000011B 	;// initializes P0 as output port
 ;------------------
 
 BACK:	MOV P1,#11111111B 	;// loads P1 with all 1's
+	MOV R1, #00000000B
      	CLR P1.0  		;// makes row 1 low
      	JB P1.4,NEXT1  		;// checks whether column 1 is low and jumps to NEXT1 if not low
-	MOV R1, #00000000B
 	MOV R0, #10000000B
      	ACALL CHECK  		;// calls CHECK subroutine
 NEXT1:	INC DPTR
@@ -83,7 +83,8 @@ CHECK2: JB P1.6, CHECK3
 CHECK3:	JB P1.7, CHECKPLAYERWON
 	JMP CHECK3
 
-;// CHECK if player found all fields
+;// CHECK if player has pressed the button Before
+;// 
 CHECKPLAYERWON:	MOV A, R1
 		JNZ CHECKPLAYERWONREGISTER2
 		MOV A,GEDRUECKTL
@@ -96,21 +97,26 @@ CHECKPLAYERWONREGISTER2:	MOV A,GEDRUECKTH
 				MOV R1, A
 				CJNE A, GEDRUECKTH, UNPRESSEDH
 				JMP BACK
+				
+;// Unpressed - Executed if the button is pressed for the first time
+;// ((ZufZahl || R1) == ZufZahl)
 UNPRESSEDH:	MOV A,R1
 		ORL A, ZUFZAHLH
 		CJNE A, ZUFZAHLH, UNPRESSEDL
 		MOV GEDRUECKTL, R1
-		JMP Backjump
+		JMP COUNTER
 UNPRESSEDL:	MOV A,R0
 		ORL A, ZUFZAHLL
 		CJNE A, ZUFZAHLL, BOMB
 		MOV GEDRUECKTL, R0
-		JMP Backjump
-BACKJUMP:	DEC R2
+		JMP COUNTER
+
+;// Decrease and Compare Counter
+COUNTER:	DEC R2
 		Mov A,R2
-		JZ WIN	
-		JMP BACK		
-	
+		JZ WIN
+		JMP BACK
+
 ;// Set WIN-LED
 WIN:	CLR P0.1
 	JMP RESTARTINIT
@@ -120,8 +126,11 @@ BOMB: 	CLR P0.0
 	JMP RESTARTINIT
 
 ;// Restart game
-RESTARTINIT:	MOV P1,#11111111B 	;// loads P1 with all 1's
+RESTARTINIT:	Mov GEDRUECKTH, #0H
+		Mov GEDRUECKTL, #0H
+		MOV P1,#11111111B 	;// loads P1 with all 1's
 		CLR P1.3  		;// makes row 1 low
 RESTART:	JB P1.7,RESTART
 		JMP BEGIN_JUMP
-     END
+
+END
