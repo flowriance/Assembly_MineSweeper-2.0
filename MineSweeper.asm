@@ -3,17 +3,20 @@
 ; Course: 	Systemnahe Programmierung 1
 ; Author:	Denny Flämig & Florian Christof
 ;
-EQU	GEDRUECKTL, 0x40
-EQU	GEDRUECKTH, 0x41
-EQU	ZUFZAHLL, 0x42
-EQU	ZUFZAHLH, 0x43
+
+ZUF8R 		EQU 0x20
+GEDRUECKTL 	EQU 0x40
+GEDRUECKTH 	EQU 0x41
+ZUFZAHLL 	EQU 0x42
+ZUFZAHLH 	EQU 0x43
 
 	ORG 00H
-BEGIN:	MOV P0,#00000011B 	;// initializes P0 as output port
+BEGIN:	call ZUFALL 
+	MOV ZUFZAHLL,A
+	MOV ZUFZAHLH, #00000001B
+	MOV P0,#11111111B 	;// initializes P0 as output port
 	MOV R2,#3D		;// initialize number of free minefields - 1
-	MOV ZUFZAHLL,#11100011B
-	MOV ZUFZAHLH,#00000001B
-	
+
 ; -----------------
 ; Polling of Matrix-Keypad
 ;------------------
@@ -23,43 +26,35 @@ BACK:	MOV P1,#11111111B 	;// loads P1 with all 1's
      	CLR P1.0  		;// makes row 1 low
      	JB P1.4,NEXT1  		;// checks whether column 1 is low and jumps to NEXT1 if not low
 	MOV R0, #10000000B
-     	ACALL CHECK  		;// calls CHECK subroutine
-NEXT1:	INC DPTR
-	JB P1.5,NEXT2 		;// checks whether column 2 is low and so on...
+     	JMP CHECK  		;// calls CHECK subroutine
+NEXT1:	JB P1.5,NEXT2 		;// checks whether column 2 is low and so on...
 	MOV R0, #01000000B
-      	ACALL CHECK
-NEXT2:	INC DPTR
-	JB P1.6,NEXT4
+      	JMP CHECK
+NEXT2:	JB P1.6,NEXT4
 	MOV R0, #00100000B
-      	ACALL CHECK
-NEXT4:	INC DPTR
-	SETB P1.0
+      	JMP CHECK
+NEXT4:	SETB P1.0
       	CLR P1.1
       	JB P1.4,NEXT5
       	MOV R0, #00010000B
-      	ACALL CHECK
-NEXT5:	INC DPTR
-	JB P1.5,NEXT6
+      	JMP CHECK
+NEXT5:	JB P1.5,NEXT6
 	MOV R0, #00001000B
-      	ACALL CHECK
-NEXT6:	INC DPTR
-	JB P1.6,NEXT8
+      	JMP CHECK
+NEXT6:	JB P1.6,NEXT8
 	MOV R0, #00000100B
-      	ACALL CHECK
-NEXT8:	INC DPTR
-	SETB P1.1
+      	JMP CHECK
+NEXT8:	SETB P1.1
       	CLR P1.2
       	JB P1.4,NEXT9
       	MOV R0, #00000010B
-      	ACALL CHECK
-NEXT9:	INC DPTR
-	JB P1.5,NEXT10
+      	JMP CHECK
+NEXT9:	JB P1.5,NEXT10
 	MOV R0, #00000001B
-      	ACALL CHECK
-NEXT10:	INC DPTR
-	JB P1.6,BACK_JUMP
+      	JMP CHECK
+NEXT10:	JB P1.6,BACK
 	MOV R1, #00000001B
-       	ACALL CHECK
+       	JMP CHECK
        	LJMP BACK
 
 ; -----------------
@@ -83,7 +78,7 @@ CHECK2: JB P1.6, CHECK3
 CHECK3:	JB P1.7, CHECKPLAYERWON
 	JMP CHECK3
 
-;// CHECK if player has pressed the button Before
+;// CHECK if player has pressed the button before
 ;// 
 CHECKPLAYERWON:	MOV A, R1
 		JNZ CHECKPLAYERWONREGISTER2
@@ -102,7 +97,7 @@ CHECKPLAYERWONREGISTER2:	MOV A,GEDRUECKTH
 ;// ((ZufZahl || R1) == ZufZahl)
 UNPRESSEDH:	MOV A,R1
 		ORL A, ZUFZAHLH
-		CJNE A, ZUFZAHLH, UNPRESSEDL
+		CJNE A, ZUFZAHLH, BOMB
 		MOV GEDRUECKTL, R1
 		JMP COUNTER
 UNPRESSEDL:	MOV A,R0
@@ -133,4 +128,15 @@ RESTARTINIT:	Mov GEDRUECKTH, #0H
 RESTART:	JB P1.7,RESTART
 		JMP BEGIN_JUMP
 
+; ------ Zufallszahlengenerator-----------------
+ZUFALL:	mov	A, ZUF8R   ; initialisiere A mit ZUF8R
+	jnz	ZUB
+	cpl	A
+	mov	ZUF8R, A
+ZUB:	anl	a, #10111000b
+	mov	C, P
+	mov	A, ZUF8R
+	rlc	A
+	mov	ZUF8R, A
+	ret
 END
