@@ -140,6 +140,7 @@ RESTART:	JB P1.7,RESTART
 ; Database
 ;------------------
 
+ORG 300h
 RANDOM_NUMBER:	DB 0B ;// Look up table starts here
 		DB 0B ;// 0 means no bomb at this field
 		DB 0B ;// 1 means bomb
