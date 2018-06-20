@@ -13,7 +13,9 @@ ZUFZAHLH 	EQU 0x43
 	ORG 00H
 BEGIN:	call ZUFALL 
 	MOV ZUFZAHLL,A
-	MOV ZUFZAHLH, #00000001B
+	call ZUFALL 
+	ANL A, #00000001B
+	MOV ZUFZAHLH,A
 	MOV P0,#11111111B 	;// initializes P0 as output port
 	MOV R2,#3D		;// initialize number of free minefields - 1
 
