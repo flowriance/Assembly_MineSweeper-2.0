@@ -7,8 +7,6 @@ Used IDE: MCU8051IDE
 
 ## Spielkonzept
 
-<img src="https://lh6.googleusercontent.com/WqLQcZFvpoNfw9CroAAxEZW-YxSs1ogLmg7UthbLCTAVPiCO0neAFLljHNp8UZhN39vGHVuNiLWGqlt2iiMA=w2736-h1552" height="400px" />
-
 Das Spielkonzept ist inspiriert durch die Spiele Hit The Frog und Minesweeper. 
 
 Auf dem Minenfeld (Taster 1-9) sind mindestens 3 Bomben versteckt.
